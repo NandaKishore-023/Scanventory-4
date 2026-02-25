@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Scanventory - Sign Up</title>
+    <link rel="stylesheet" href="css/login.css">
+    <style>
+        .signup-box {
+            border: 1px solid #ccc;
+            padding: 30px;
+            width: 350px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 50px auto;
+        }
+
+        .signup-box h2 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #F69500;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #F69500;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            background: #F69500;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: #F69500;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            padding: 10px;
+            background: #fdf0ef;
+            border-radius: 5px;
+        }
+
+        .success-message {
+            color: #27ae60;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+            padding: 10px;
+            background: #e8f8f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="signup-box">
+        <h2>Create Organization Account</h2>
+
+        <div class="form-group">
+            <label>Organization Name</label>
+            <input type="text" id="orgName" placeholder="Enter organization name">
+        </div>
+
+        <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="fullName" placeholder="Enter your full name">
+        </div>
+
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="Enter your email">
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="password" placeholder="Enter password">
+        </div>
+
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <input type="password" id="confirmPassword" placeholder="Confirm password">
+        </div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <button class="btn" onclick="handleSignUp()">Create Account</button>
+
+        <div class="links">
+            <a href="login.html">Already have an account? Login</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabaseClient.js"></script>
+    <script>
+
+        // Add this helper function at the top of the script in signup.html
+        function getBaseUrl() {
+                // List of your production domains
+                const productionDomains = [
+                    'https://nandakishore-023.github.io/Scanventory-4/',
+                    'your-custom-domain.com' // Add if you get one later
+                ];
+
+                const currentHost = window.location.hostname;
+
+                // Check if current host is in production list
+                if (productionDomains.includes(currentHost)) {
+                    return window.location.origin; // Use current origin
+                }
+
+                // Check if it's localhost
+                if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                    return 'http://localhost:5500';
+                }
+
+                // Default fallback
+                return window.location.origin;
+            }
+
+        async function handleSignUp() {
+            console.log('🚀 handleSignUp started');
+
+            // Get form values
+            const orgName = document.getElementById('orgName').value;
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            console.log('📝 Form values:', {
+                orgName,
+                fullName,
+                email,
+                passwordLength: password?.length
+            });
+
+            const errorDiv = document.getElementById('errorMessage');
+            const successDiv = document.getElementById('successMessage');
+
+            // Hide previous messages
+            errorDiv.style.display = 'none';
+            successDiv.style.display = 'none';
+
+            // Validation
+            if (!orgName || !fullName || !email || !password) {
+                errorDiv.textContent = 'Please fill in all fields';
+                errorDiv.style.display = 'block';
+                console.log('❌ Validation failed: missing fields');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = 'Passwords do not match';
+                errorDiv.style.display = 'block';
+                console.log('❌ Validation failed: passwords do not match');
+                return;
+            }
+
+            if (password.length < 6) {
+                errorDiv.textContent = 'Password must be at least 6 characters';
+                errorDiv.style.display = 'block';
+                console.log('❌ Validation failed: password too short');
+                return;
+            }
+
+            try {
+                console.log('📧 Attempting signup with email:', email);
+
+                // THIS IS THE FIX - exactly matching your working test
+                 const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            org_name: orgName,
+                            role: 'owner'
+                        },
+                        emailRedirectTo: getBaseUrl()  // This is key!
+                    }
+                });
+            
+                if (error) {
+                    console.error('❌ Signup error:', error);
+                    throw error;
+                }
+
+                console.log('✅ Signup response:', data);
+
+                if (data.user) {
+                    successDiv.textContent = 'Account created successfully! Please check your email for verification.';
+                    successDiv.style.display = 'block';
+
+                    // Clear form
+                    document.getElementById('orgName').value = '';
+                    document.getElementById('fullName').value = '';
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+                    document.getElementById('confirmPassword').value = '';
+
+                    // Redirect to login after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 3000);
+                } else {
+                    errorDiv.textContent = 'Signup failed. Please try again.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('❌ Signup exception:', error);
+                errorDiv.textContent = error.message || 'An error occurred during signup';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Test if Supabase is available
+        console.log('🔌 Supabase client available:', !!window.supabaseClient);
+    </script>
+
+</body>
+
+</html>
