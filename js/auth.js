@@ -6,10 +6,10 @@ function getBaseUrl() {
     if (isLocalhost) {
         return 'http://localhost:5500';
     } else {
+        // For GitHub Pages with repository name
         return 'https://nandakishore-023.github.io/Scanventory-4';
     }
 }
-
 
 // Make sure supabaseClient is available
 if (typeof window.supabaseClient === 'undefined') {
@@ -108,4 +108,5 @@ async function checkResourceAccess(resourceType, resourceId) {
         .single();
     
     return !!data;
+
 }
